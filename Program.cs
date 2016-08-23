@@ -2,18 +2,30 @@
 using System.Collections;
 using System.IO;
 using Newtonsoft.Json;
-
+using CommandLine;
+using CommandLine.Text;
 namespace TeamFortressData
 {
+
     class Program
     {
+        class Options
+        {
+            [Option('d', "dir", Required = false, HelpText = "Location of TF2 executable", DefaultValue = @"C:\Program Files(x86)\Steam\steamapps\common\Team Fortress 2\tf")]
+            public string TF2dir { get { return TF2Dir; } set { TF2Dir = value; } }
+            [HelpOption]
+            public string GetUsage()
+            {
+                return HelpText.AutoBuild(this, (HelpText current) => HelpText.DefaultParsingErrorsHandler(this, current));
+            }
+        }
 
 
         /// <summary>
         /// GLobal static data.
         /// </summary>
         static HttpServer DataServer;
-        static string TF2Dir = @"C:\Program Files (x86)\Steam\steamapps\common\Team Fortress 2\tf";
+        static string TF2Dir;
         static int linesRead = 0;
         static ArrayList Players = new ArrayList();
         static TF2DataContainer tfdata = new TF2DataContainer();
@@ -27,7 +39,15 @@ namespace TeamFortressData
         /// <param name="args"></param>
         static void Main(string[] args)
         {
-
+            Console.Clear();
+            if(File.Exists("./tf2Location.txt"))
+            {
+                TF2Dir = File.ReadAllText("./tf2Location.txt");
+            }
+            else
+            {
+                File.WriteAllText("./tf2Location.txt", TF2Dir);
+            }
             Console.WriteLine("Setting Up Auto-Config TF2 within default steam directory!");
             Console.WriteLine(TF2Dir);
 
