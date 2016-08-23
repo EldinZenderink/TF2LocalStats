@@ -4,6 +4,10 @@ using System.IO;
 using Newtonsoft.Json;
 using CommandLine;
 using CommandLine.Text;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+
 namespace TeamFortressData
 {
 
@@ -39,17 +43,31 @@ namespace TeamFortressData
         /// <param name="args"></param>
         static void Main(string[] args)
         {
-            Console.Clear();
-            if(File.Exists("./tf2Location.txt"))
+            Console.WriteLine("Searching for TF2 Directory");
+            string path = @"c:\";
+            string searchPattern = "Team Fortress 2";
+            DriveInfo[] drives = DriveInfo.GetDrives();
+            bool found = false;
+            foreach(DriveInfo d in drives)
             {
-                TF2Dir = File.ReadAllText("./tf2Location.txt");
+                TF2Dir = SearchDir(d.Name, searchPattern, "");
+                if (TF2Dir.Length > 0)
+                {
+                    TF2Dir = TF2Dir + @"\tf";
+                    Console.WriteLine("Found Dir At: " + TF2Dir);
+                    found = true;
+                    break;
+                }
             }
-            else
+
+            if (!found)
             {
-                File.WriteAllText("./tf2Location.txt", TF2Dir);
-            }
-            Console.WriteLine("Setting Up Auto-Config TF2 within default steam directory!");
-            Console.WriteLine(TF2Dir);
+                Console.WriteLine("Could not locate TF2 Directory in all of your drives, make sure you have it installed!");
+                Console.WriteLine("Exist by pressing a key");
+                Console.ReadLine();
+                return;
+            }        
+                   
 
             string ConfigData = "";
             bool OverWrite = false;
@@ -146,25 +164,20 @@ namespace TeamFortressData
                             
                             if (Line.ToLower().Contains("connected to"))
                             {
-                                try
-                                {
-                                    Players = new ArrayList();
-                                    tfdata = new TF2DataContainer();
-                                    tfdata.TotalKills = 0;
-                                    tfdata.TotalPlayers = 0;
-                                    tfdata.TotalSuicides = 0;
-                                    tfdata.TotalAmountOfSentryKills = 0;
-                                    tfdata.TotalAmountOfHeadshots = 0;
-                                    tfdata.TotalAmountOfCrits = 0;
-                                    tfdata.TotalAmountOfBackstabs = 0;
-                                    tfdata.TotalAmountOfReflectKills = 0;
-                                    tfdata.ServerIP = Line.Replace("connected to", "");
-                                    linesRead = 0;
-                                } catch
-                                {
+                               
+                                Players = new ArrayList();
+                                tfdata = new TF2DataContainer();
+                                tfdata.TotalKills = 0;
+                                tfdata.TotalPlayers = 0;
+                                tfdata.TotalSuicides = 0;
+                                tfdata.TotalAmountOfSentryKills = 0;
+                                tfdata.TotalAmountOfHeadshots = 0;
+                                tfdata.TotalAmountOfCrits = 0;
+                                tfdata.TotalAmountOfBackstabs = 0;
+                                tfdata.TotalAmountOfReflectKills = 0;
+                                tfdata.ServerIP = Line.Replace("connected to", "");
+                                linesRead = 0;
 
-                                }
-                                
                             }
 
                             if (Line.ToLower().Contains("shutdowngc"))
@@ -243,6 +256,47 @@ namespace TeamFortressData
                     DataServer.SendMessage("FILE NOT AVAILABLE :(");
                 }               
             }
+        }
+
+        
+
+        /// <summary>
+        /// Searches recursively folders with given search parameter, parameter dir tells the method where it should start looking
+        /// dirFound is used to check if there is a directory found. 
+        /// Not a well made method as it stops on the first occurence that resembles the search parameter, instead of being exact.
+        /// </summary>
+        /// <param name="dir"></param>
+        /// <param name="search"></param>
+        /// <param name="dirFound"></param>
+        /// <returns></returns>
+        public static string SearchDir(string dir, string search, string dirFound)
+        {
+            try
+            {
+                string[] dirs = Directory.GetDirectories(dir);
+                foreach (string directory in dirs)
+                {
+                    // Console.WriteLine("Searching: " + directory);
+                    if (directory.Contains(search))
+                    {
+                        dirFound = directory;
+                    }
+
+                    if (dirFound.Length > 0)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        dirFound = SearchDir(directory, search, dirFound);
+                    }
+                }
+            }
+            catch
+            {
+            }
+
+            return dirFound;
         }
     }
 }
