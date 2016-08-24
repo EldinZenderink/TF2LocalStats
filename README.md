@@ -24,6 +24,25 @@ Look up your local network ip by doing the following:
 6. If nothing shows up, refresh a few times ^^.
  
 
+### Changelog
+
+**v0.2:**
+
+				Changes:
+				- Moved on from google charts to chartsjs due to easier updating of charts.
+				- Fully removed command line library and code
+
+				Added:
+				- Now auto detects tf2 directory(first time and slow) and stores the location in registery (second launch is faster).
+				- Opens interface directly in your default browser when clicking on application.
+				- 2 line charts displaying: kills per second & total kills related to the time in seconds
+				- 2 bar charts displaying: total kills vs crits & misc such as (headshots, backstabs etc)
+				- Option to toggle full history (form second 0 to x) or resetting the line charts every 15 seconds by clicking on them.
+
+				Fixed:
+
+				- Due to character encoding the Contains function would not return true when it should have, fixed!
+
 ### Tech
 
 TF2LocalStats uses a number of open source projects to work properly:

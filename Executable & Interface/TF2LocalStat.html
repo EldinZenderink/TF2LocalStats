@@ -1,0 +1,354 @@
+<html.
+<head>
+<title> TF2 Data </title>
+</head>
+
+<link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<!--Import materialize.css-->
+  <!-- Compiled and minified CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/css/materialize.min.css">
+
+<!--Let browser know website is optimized for mobile-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js" ></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.2.1/Chart.min.js"></script>
+
+  <!-- Compiled and minified JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/js/materialize.min.js"></script>
+
+  <script src="https://cdn.rawgit.com/EldinZenderink/CSWebServerDetection/master/CSWebServerDetection.js"> </script>
+  
+  <script src="LineChart.js"> </script>
+  <script src="BarChart.js"> </script>
+<script type="text/javascript">
+
+
+
+
+var detectServers = new ClientSideServerDetection();
+
+//you can add multiple ports to check, but be aware that every new port to check increases search time significantly,
+//better check one port if possible.
+//if this is not set, default ports that will be checked are "80" and "8080"
+detectServers.setPorts(["6365"]);
+
+//runs the detection twice for every partial
+detectServers.setPartials(["?message="]);
+
+//run the server detection, parameter is a callback function
+//you can run this multiple times
+detectServers.runDetection(gotServers);
+
+//callback function, needs a parameter which will contain server data *read more down below
+//in its current state, the callback function will be ran every single time a new unique server has been detected
+function gotServers(serverInfo){
+  console.log("SERVERS FOUND:");
+    console.log(serverInfo[0].ip);
+    ip = serverInfo[0].ip;
+    gotIp = true;
+}
+
+function estabilshConnection(){
+  console.log("retreiving server ip");
+  detectServers = new ClientSideServerDetection();
+
+  //you can add multiple ports to check, but be aware that every new port to check increases search time significantly,
+  //better check one port if possible.
+  //if this is not set, default ports that will be checked are "80" and "8080"
+  detectServers.setPorts(["6365"]);
+
+  //runs the detection twice for every partial
+  detectServers.setPartials(["?message="]);
+
+  //run the server detection, parameter is a callback function
+  //you can run this multiple times
+  detectServers.runDetection(gotServers);
+}
+
+
+var ip = "";
+var seconds = 1;
+var dataKillsPerSecondChart = [{
+    label: "Kills Per Second",
+    datax: [0],
+    datay: [0]
+}];
+
+var dataTotalKillsChart = [{
+    label: "Total Kills",
+    datax: [0],
+    datay: [0]
+}];
+
+
+var killspersecondchart;
+var totalkillschart;
+var critsvstotalkills;
+var miscchart;
+
+$(document).ready(function(){
+  if( navigator.userAgent.match(/Android/i)
+   || navigator.userAgent.match(/webOS/i)
+   || navigator.userAgent.match(/iPhone/i)
+   || navigator.userAgent.match(/iPad/i)
+   || navigator.userAgent.match(/iPod/i)
+   || navigator.userAgent.match(/BlackBerry/i)
+   || navigator.userAgent.match(/Windows Phone/i)
+   ){
+        totalkillschart = new LineChart('#chart_totalkillsmob', "Total Kills", dataTotalKillsChart);
+        killspersecondchart = new LineChart('#chart_killspersecondmob', "Kills Per Second", dataKillsPerSecondChart);
+
+        critsvstotalkills = new BarChart('#chart_critsvstotalkillsmob', "Total Kills", [{
+          label: "Total Kills",
+          data: 0
+        },{
+          label: "Crits",
+          data: 0
+        }]);
+        miscchart = new BarChart('#chart_miscmob', "Kills Per Second", [{
+          label: "Headshots",
+          data: 0
+        },{
+          label: "Backstabs",
+          data: 0
+        },{
+          label: "Sentry Kills",
+          data: 0
+        },{
+          label: "Reflect Kills",
+          data: 0
+        }]);
+
+    }
+   else {
+        totalkillschart = new LineChart('#chart_totalkills', "Total Kills", dataTotalKillsChart);
+        killspersecondchart = new LineChart('#chart_killspersecond', "Kills Per Second", dataKillsPerSecondChart);
+
+        critsvstotalkills = new BarChart('#chart_critsvstotalkills', "Total Kills vs Crits", [{
+          label: "Total Kills",
+          data: 0
+        },{
+          label: "Crits",
+          data: 0
+        }]);
+
+        miscchart = new BarChart('#chart_misc', "Kills Per Second", [{
+          label: "Headshots",
+          data: 0
+        },{
+          label: "Backstabs",
+          data: 0
+        },{
+          label: "Sentry Kills",
+          data: 0
+        },{
+          label: "Reflect Kills",
+          data: 0
+        }]);
+    }
+
+
+   
+});
+
+
+
+
+var fullchart = false;
+var previousKillCount = 0;
+
+setInterval(function(){
+	if(gotIp){
+		$('#connection_status').html("network_wifi");
+		$.get( "http://" + ip + ":6365", { message: "tf2data"}).done(function(receiveddata){
+
+	    	var serverData = receiveddata.rawjson;
+	    	if(serverData.TotalKills == 0 || receiveddata.rawjson.length <= 0){
+	    		seconds = 0;
+          dataKillsPerSecondChart = [{
+              label: "Kills Per Second",
+              datax: [0],
+              datay: [0]
+          }];
+
+          dataTotalKillsChart = [{
+              label: "Total Kills",
+              datax: [0],
+              datay: [0]
+          }];
+
+	    	} else {
+
+		    	/*data.addRow([seconds, serverData.KillsPerSecond, (serverData.TotalAmountOfCrits - serverData.TotalAmountOfHeadshots - serverData.TotalAmountOfBackstabs - serverData.TotalAmountOfReflectKills), serverData.TotalAmountOfHeadshots, serverData.TotalAmountOfBackstabs, serverData.TotalAmountOfReflectKills, serverData.TotalAmountOfSentryKills, serverData.TotalSuicides]); */
+
+
+          if(!fullchart){
+            if((seconds % 15) == 0){
+              killspersecondchart.resetChart([{
+                  label: "Kills Per Second",
+                  datax: seconds,
+                  datay: (serverData.TotalKills - previousKillCount)
+              }]);
+
+              totalkillschart.resetChart([{
+                  label: "Total Kills",
+                  datax: seconds,
+                  datay: serverData.TotalKills
+              }]);
+
+
+            } else {
+
+                if( serverData.TotalKills >= 0 ){
+                    killspersecondchart.updateChart("Kills Per Second", seconds, (serverData.TotalKills - previousKillCount));
+                    totalkillschart.updateChart("Total Kills", seconds, serverData.TotalKills);
+                } else {
+                      killspersecondchart.updateChart("Kills Per Second", seconds, 0);
+                      totalkillschart.updateChart("Total Kills", seconds, previousKillCount);
+                }       
+                         
+            }
+          } else {
+
+              killspersecondchart.resetChart(dataKillsPerSecondChart);
+
+              totalkillschart.resetChart(dataTotalKillsChart);
+          }
+
+
+          critsvstotalkills.updateChart([serverData.TotalKills, (serverData.TotalAmountOfCrits - serverData.TotalAmountOfHeadshots - serverData.TotalAmountOfBackstabs - serverData.TotalAmountOfReflectKills)]);
+          miscchart.updateChart([serverData.TotalAmountOfHeadshots, serverData.TotalAmountOfBackstabs, serverData.TotalAmountOfSentryKills, serverData.TotalAmountOfReflectKills]);
+          
+          /*
+          [{
+            label: "data1",
+            datax: [0,1,2,3],
+            datay: [10,2,6,3]
+          },{
+            label: "data2",
+            datax: [0,1,2,3],
+            datay: [10,2,6,3]
+          }]
+           */
+          
+          var updateX = dataKillsPerSecondChart[0].datax;
+          updateX.push(seconds);
+          dataKillsPerSecondChart[0].datax = updateX;
+          var updateY = dataKillsPerSecondChart[0].datay;
+          updateY.push((serverData.TotalKills - previousKillCount));
+          dataKillsPerSecondChart[0].datay = updateY;
+
+          var updateX2 = dataTotalKillsChart[0].datax;
+          updateX2.push(seconds);
+          dataTotalKillsChart[0].datax = updateX2;
+          var updateY2 = dataTotalKillsChart[0].datay;
+          updateY2.push(serverData.TotalKills);
+          dataTotalKillsChart[0].datay = updateY2;
+
+
+          previousKillCount = serverData.TotalKills;
+	    		seconds++;
+        }
+		    
+		   
+	    	
+	   
+
+		});
+	} 
+	
+}, 1000);
+	
+function toggleFullChart(){
+  if(fullchart == false){
+    fullchart = true;
+  } else {
+    fullchart = false;
+  }
+  ;
+}
+
+</script>
+
+<body>
+  <nav>
+    <div class="nav-wrapper">
+      <a href="#" class="brand-logo center">TF2 Data Analyzer</a>
+      <ul id="nav-mobile" class="left hide-on-med-and-down">
+        <li><a href="">Home</a></li>
+      </ul>
+      <ul class="right">
+      	<a onclick="estabilshConnection()"><i class="material-icons" id="connection_status">signal_wifi_off</i></a>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="row hide-on-large-only">
+    <div class="col s12">
+      <canvas onclick="toggleFullChart()"  id="chart_killspersecondmob" style="min-width: 100%; min-height: 100%;"></canvas>
+    </div>
+  </div>
+  <div class="row hide-on-large-only">
+    <div class="col s12">
+      <canvas onclick="toggleFullChart()" id="chart_totalkillsmob" style="min-width: 100%; min-height: 100%;"></canvas>
+    </div>
+  </div>
+  <div class="row hide-on-large-only">
+    <div class="col s12 ">
+      <canvas id="chart_critsvstotalkillsmob" style="min-width: 100%; min-height: 100%;"></canvas>
+    </div>
+  </div>
+  <div class="row hide-on-large-only">
+    <div class="col s12 ">
+      <canvas id="chart_miscmob" style="min-width: 100%; min-height: 100%;"></canvas>
+    </div>
+  </div>
+  <div class="row hide-on-large-only">
+    <div class="col s12">
+      <canvas id="chart_sentrykills" style="min-width: 100%; min-height: 100%;"></canvas>
+    </div>
+  </div>
+  <div class="row hide-on-large-only">
+    <div class="col s12">
+      <canvas id="chart_reflectkills" style="min-width: 100%; min-height: 100%;"></canvas>
+    </div>
+  </div>  
+  <div class="row hide-on-large-only" >
+    <div class="col s12 ">
+      <canvas id="chart_suicides" style="min-width: 100%; min-height: 100%;"></canvas>
+    </div>
+  </div>
+<!-- SEEEEEEPPPPEERRAAAAATIIIIIIIIOOOOOOOOOOOOOONNNNNNNNNNNN.... BADUM TSSS -->
+	<div class="row hide-on-small-only" >
+		<div class="col s6 left" style="min-height: 33%;">
+		  <canvas id="chart_killspersecond" onclick="toggleFullChart()"  style="min-width: 100%; min-height: 100%;"></canvas>
+		</div>
+    <div class="col s6 right" style="min-height: 33%;">
+      <canvas id="chart_totalkills" onclick="toggleFullChart()"  style="min-width: 100%; min-height: 100%;"></canvas>
+    </div>
+	</div>
+	<div class="row hide-on-small-only"  > 
+		<div class="col s4 left" style="min-height: 33%;">
+		  <canvas id="chart_critsvstotalkills" style="min-width: 100%; min-height: 100%;"></canvas>
+		</div>
+		<div class="col s8 right" style="min-height: 33%;">
+		  <canvas id="chart_misc" style="min-width: 100%; min-height: 100%;"></canvas>
+		</div>
+	</div>
+	<div class="row hide-on-small-only" >
+		<div class="col s4 center" style="min-height: 100%;">
+		  <canvas id="chart_sentrykills" style="min-width: 100%; min-height: 100%;"></canvas>
+		</div>
+		<div class="col s4 center" style="min-height: 100%;">
+		  <canvas id="chart_reflectkills" style="min-width: 100%; min-height: 100%;"></canvas>
+		</div>
+		<div class="col s4 center" >
+		  <canvas id="chart_suicides" style="min-width: 100%; min-height: 100%;"></canvas>
+		</div>
+	</div>
+
+  
+
+</body>
+</html>

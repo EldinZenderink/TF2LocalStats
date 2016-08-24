@@ -2,27 +2,15 @@
 using System.Collections;
 using System.IO;
 using Newtonsoft.Json;
-using CommandLine;
-using CommandLine.Text;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
+using System.Text;
+using Microsoft.Win32;
 
 namespace TeamFortressData
 {
 
     class Program
     {
-        class Options
-        {
-            [Option('d', "dir", Required = false, HelpText = "Location of TF2 executable", DefaultValue = @"C:\Program Files(x86)\Steam\steamapps\common\Team Fortress 2\tf")]
-            public string TF2dir { get { return TF2Dir; } set { TF2Dir = value; } }
-            [HelpOption]
-            public string GetUsage()
-            {
-                return HelpText.AutoBuild(this, (HelpText current) => HelpText.DefaultParsingErrorsHandler(this, current));
-            }
-        }
+       
 
 
         /// <summary>
@@ -43,22 +31,43 @@ namespace TeamFortressData
         /// <param name="args"></param>
         static void Main(string[] args)
         {
-            Console.WriteLine("Searching for TF2 Directory");
-            string path = @"c:\";
-            string searchPattern = "Team Fortress 2";
-            DriveInfo[] drives = DriveInfo.GetDrives();
+            Console.WriteLine("Checking TF2 Directory location in register!");
             bool found = false;
-            foreach(DriveInfo d in drives)
+            RegistryKey key;
+            key = Registry.CurrentUser.OpenSubKey("TF2Data_TF2Dir");
+            if(key != null)
             {
-                TF2Dir = SearchDir(d.Name, searchPattern, "");
-                if (TF2Dir.Length > 0)
-                {
-                    TF2Dir = TF2Dir + @"\tf";
-                    Console.WriteLine("Found Dir At: " + TF2Dir);
-                    found = true;
-                    break;
-                }
+                TF2Dir = key.GetValue("DIR") as string;
             }
+            if (Directory.Exists(TF2Dir)) {
+                key.Close();
+                Console.WriteLine("Directory in register exists :D, dir: " + TF2Dir);
+                found = true;
+            } else
+            {
+                Console.WriteLine("Searching for TF2 Directory");
+                string path = @"c:\";
+                string searchPattern = "Team Fortress 2";
+                DriveInfo[] drives = DriveInfo.GetDrives();
+
+                foreach (DriveInfo d in drives)
+                {
+                    TF2Dir = SearchDir(d.Name, searchPattern, "");
+                    if (TF2Dir.Length > 0)
+                    {
+                        TF2Dir = TF2Dir + @"\tf";
+                        Console.WriteLine("Found Dir At: " + TF2Dir);
+
+                        key = Registry.CurrentUser.CreateSubKey("TF2Data_TF2Dir");
+                        key.SetValue("DIR", TF2Dir);
+                        key.Close();
+
+                        found = true;
+                        break;
+                    }
+                }
+            }        
+                      
 
             if (!found)
             {
@@ -124,6 +133,14 @@ namespace TeamFortressData
 
             DataServer = new HttpServer(MessageReceivedCallback, 6365);
 
+            try
+            {
+                System.Diagnostics.Process.Start("http://127.0.0.1:6365/TF2LocalStat.html");
+            } catch
+            {
+
+            }
+
 
             Console.ReadLine();
 
@@ -136,7 +153,7 @@ namespace TeamFortressData
         /// <param name="messagereceived"></param>
         private static void MessageReceivedCallback(string messagereceived)
         {
-            Console.WriteLine("HTTP MESSAGE: " + messagereceived);
+            Console.Clear();
 
             if (messagereceived.Contains("tf2data"))
             {
@@ -147,21 +164,29 @@ namespace TeamFortressData
                     {
                         string Data = Reader.ReadToEnd();
                         string[] ConnectedParts = Data.Split(new string[] { "Connecting to" }, StringSplitOptions.None);
+                        
                         int amountOfConnections = ConnectedParts.Length;
-                        string[] Lines = ConnectedParts[amountOfConnections - 1].Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
 
+                        Encoding utf8 = Encoding.UTF8;
+                        byte[] utfBytes = utf8.GetBytes(ConnectedParts[amountOfConnections - 1]);
+                        string parsed = utf8.GetString(utfBytes);
+
+                        string[] Lines = parsed.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+                        Console.WriteLine("New added lines since previous: " + (Lines.Length - linesRead));
+
+                        if((Lines.Length - linesRead) < 0)
+                        {
+                            linesRead = 0;
+                        }
                         for (int LinesRead = linesRead; LinesRead < Lines.Length; LinesRead++)
                         {
+                           
                             linesRead = LinesRead;
-                            string Line = Lines[linesRead];
-                            try
-                            {
-                                Line = Lines[linesRead + 1]; 
-                            } catch
-                            {
-                                Line = Lines[linesRead];
-                            }
-                            
+                            string Line;
+
+                            Line = Lines[LinesRead];
+                            Console.WriteLine(Line);
+                        
                             if (Line.ToLower().Contains("connected to"))
                             {
                                
@@ -188,6 +213,7 @@ namespace TeamFortressData
 
                             if (Line.ToLower().Contains("killed"))
                             {
+                                Console.WriteLine("Killed Found!");
                                 tfdata.TotalKills = tfdata.TotalKills + 1;
                                 string playerWhoKilled = Line.Split(' ')[0];
                                 string playerWhoDied = Line.Split(' ')[2];
@@ -235,7 +261,6 @@ namespace TeamFortressData
                         tfdata.AllPlayers = Players;
                         var json = JsonConvert.SerializeObject(tfdata);
                         DataServer.JsonToSend(json);
-                        Console.WriteLine("Succesfully send json!");
                     }
 
                     if (shouldRemove)

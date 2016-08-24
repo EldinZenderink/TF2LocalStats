@@ -279,16 +279,6 @@ namespace TeamFortressData
                                     rd.Close();
                                     stream.Close();
                                     client.Close();
-                                    if (rawJsonToSend != "[\"NOMESSAGES\"]")
-                                    {
-
-                                        rawJsonToSend = "[\"NOMESSAGES\"]";
-                                    }
-                                    if (jsonDataToSend != "\"NOMESSAGES\",")
-                                    {
-
-                                        jsonDataToSend = "\"NOMESSAGES\",";
-                                    }
                                 }
                                 catch
                                 {
