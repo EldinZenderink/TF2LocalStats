@@ -4,6 +4,7 @@ TF2LocalStats is a simple program that allows you to see real time information a
 
 ### Demo
 [YouTube video showing what it does. (v0.1)](https://www.youtube.com/watch?v=NzCfrH6TdLs)
+
 [YouTube video (v0.3)](https://youtu.be/MYEpSDlQrg4)
 
 ### Use Cases
