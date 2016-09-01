@@ -59,6 +59,12 @@ Look up your local network ip by doing the following:
 
 				- Due to character encoding the Contains function would not return true when it should have, fixed!
 
+### Modding
+
+You can develop your own interface, if the default one is not to your liking ^^.
+
+[Developing your own interface!](https://github.com/EldinZenderink/TF2LocalStats/wiki/Developing-your-own-interface!)
+
 ### Tech
 
 TF2LocalStats uses a number of open source projects to work properly:
