@@ -3,13 +3,16 @@
 TF2LocalStats is a simple program that allows you to see real time information about the whole server (Total Kills, Crits, etc). 
 
 ### Demo
-[YouTube video showing what it does.](https://www.youtube.com/watch?v=NzCfrH6TdLs)
+[YouTube video showing what it does. (v0.1)](https://www.youtube.com/watch?v=NzCfrH6TdLs)
+[YouTube video (v0.3)](https://youtu.be/MYEpSDlQrg4)
 
 ### Use Cases
 If you like numbers and data in real time, this is just for you :D. It doesn't have any uses, just something to keep track of the server your playing on ^^. 
 
 ### Usage
-Download the map containing the executable and the interface, make sure you keep those files together. Run the executable, and access the interface by either clicking on the .html file or opening your browser and typing: 127.0.0.1:6365/TF2LocalStat.html, and yes, this works on phones as well by doing the following:
+Download the map containing the executable and the interface, make sure you keep those files together. Run the executable, follow the setup questions asked within the console window, after you are done, it will launch the interface in your default browser as well as launching team fortress 2 if it  isn't running yet. 
+
+You can access the interface on your phone or tablet as well, if your phone and tablet are connected on the same network as your PC where you are playing tf2 on.
 
 Look up your local network ip by doing the following: 
  
@@ -18,10 +21,24 @@ Look up your local network ip by doing the following:
 3. Remember the IPv4 Address
 4. Open your browser on your phone (while connected to the same network)
 5. Type in http://"YOURIPv4ADDRESS":6365/TF2LocalStat.html
-6. If the connection icon in the upper right corner stays disconnected, click on it, wait a a second and if it stays the same refresh page. ^^.
  
 
 ### Changelog
+**v0.3**
+				Changes:
+				- Now directly connects to the server to retreive player names.
+				- Removed auto detection of servers on local network (overkill as I can just use the ip from your address bar in your browser :S)
+				
+				Added:
+				- Control charts with binds while you are inside TF2.
+					-Default charts controls:
+						Key: x = resetting the charts data.
+						Key: z = pausing the chart (it will not receive new data)
+						Key: c = resuming the chart
+				- You can change the key bindings by following the setup procedure in the Console Window when you launch the application.
+				- Interface shows in the upper right corner the status (paused, recording/receiving, waiting (for tf2 to join a server).
+				- New bar chart added which shows Kills, Deaths and K/D Ratio per player (blue,red,green bars)
+				- New homemade barchart library added (to replace chartjs barchart, should also replace linechart in the future to phase out chartjs).
 
 **v0.2:**
 
@@ -46,8 +63,7 @@ TF2LocalStats uses a number of open source projects to work properly:
 
 * [jQuery](https://jquery.com/) - duh
 * [MaterializeCSS](http://materializecss.com/) - awesome css framwork
-* [CSWebServerDetection](https://github.com/EldinZenderink/CSWebServerDetection) - MINE :D
-* [ChartsJS](http://www.chartjs.org/) - amazing graphs and easy to use :D
+* [ChartJS](http://www.chartjs.org/) - soon to be repaced by my home made chart library :D
 * [Newtonsoft Json.NET](http://www.newtonsoft.com/json) - awesome json framework for C#
 
 ### Development
