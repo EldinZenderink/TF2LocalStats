@@ -25,6 +25,7 @@ Look up your local network ip by doing the following:
 
 ### Changelog
 **v0.3**
+
 				Changes:
 				- Now directly connects to the server to retreive player names.
 				- Removed auto detection of servers on local network (overkill as I can just use the ip from your address bar in your browser :S)
